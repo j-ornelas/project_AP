@@ -1,0 +1,20 @@
+{
+  "name": "dome-wars-game",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser-based artillery game inspired by Dome Wars",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.50.0",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9"
+  }
+}

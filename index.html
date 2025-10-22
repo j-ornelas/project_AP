@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dome Wars - Artillery Game</title>
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <div id="game-container">
+    <div id="ui-overlay">
+      <div id="game-info">
+        <div id="player-info">
+          <h2>Player <span id="current-player">1</span></h2>
+          <div class="stats">
+            <div>Power: <span id="power-value">50</span>%</div>
+            <div>Angle: <span id="angle-value">45</span>°</div>
+          </div>
+        </div>
+        <div id="controls">
+          <div class="control-group">
+            <label for="power-slider">Power:</label>
+            <input type="range" id="power-slider" min="10" max="100" value="50">
+          </div>
+          <div class="control-group">
+            <label for="angle-slider">Angle:</label>
+            <input type="range" id="angle-slider" min="0" max="180" value="45">
+          </div>
+          <button id="fire-button">Fire!</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+
