@@ -1,9 +1,7 @@
 export class Terrain {
   points: number[] = [];
-  private width: number = 0;
 
   generate(width: number): void {
-    this.width = width;
     this.points = [];
 
     // Generate simple rolling hills using sine waves
@@ -24,7 +22,6 @@ export class Terrain {
 
   setFromArray(points: number[]): void {
     this.points = [...points];
-    this.width = points.length;
   }
 
   getHeight(x: number): number {
