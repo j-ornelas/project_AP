@@ -5,10 +5,13 @@ export class LobbyScreen {
     color: string,
     playerCount: number
   ) => void;
+  private readonly STORAGE_KEY_NAME = "projectAP_playerName";
+  private readonly STORAGE_KEY_COLOR = "projectAP_playerColor";
 
   constructor() {
     this.container = this.createUI();
     document.body.appendChild(this.container);
+    this.loadSavedPreferences();
   }
 
   private createUI(): HTMLElement {
@@ -22,7 +25,7 @@ export class LobbyScreen {
         <div class="lobby-form">
           <div class="form-group">
             <label for="player-name">Your Name:</label>
-            <input type="text" id="player-name" maxlength="20" placeholder="Enter your name" value="Player">
+            <input type="text" id="player-name" maxlength="20" placeholder="Enter your name" value="">
           </div>
           
           <div class="form-group">
@@ -93,6 +96,10 @@ export class LobbyScreen {
 
     joinBtn?.addEventListener("click", () => {
       const playerName = nameInput.value.trim() || "Player";
+
+      // Save preferences to localStorage
+      this.savePreferences(playerName, selectedColor);
+
       this.onJoinCallback?.(playerName, selectedColor, selectedPlayerCount);
     });
 
@@ -141,5 +148,55 @@ export class LobbyScreen {
 
   destroy(): void {
     this.container.remove();
+  }
+
+  private savePreferences(name: string, color: string): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY_NAME, name);
+      localStorage.setItem(this.STORAGE_KEY_COLOR, color);
+    } catch (error) {
+      console.warn("Could not save preferences to localStorage:", error);
+    }
+  }
+
+  private loadSavedPreferences(): void {
+    try {
+      const savedName = localStorage.getItem(this.STORAGE_KEY_NAME);
+      const savedColor = localStorage.getItem(this.STORAGE_KEY_COLOR);
+
+      // Load saved name
+      if (savedName) {
+        const nameInput = this.container.querySelector(
+          "#player-name"
+        ) as HTMLInputElement;
+        if (nameInput) {
+          nameInput.value = savedName;
+        }
+      } else {
+        // Default name if nothing saved
+        const nameInput = this.container.querySelector(
+          "#player-name"
+        ) as HTMLInputElement;
+        if (nameInput) {
+          nameInput.value = "Player";
+        }
+      }
+
+      // Load saved color
+      if (savedColor) {
+        const colorButtons = this.container.querySelectorAll(".color-btn");
+        colorButtons.forEach((btn) => {
+          const btnColor = btn.getAttribute("data-color");
+          if (btnColor === savedColor) {
+            // Remove active from all buttons
+            colorButtons.forEach((b) => b.classList.remove("active"));
+            // Set this one as active
+            btn.classList.add("active");
+          }
+        });
+      }
+    } catch (error) {
+      console.warn("Could not load preferences from localStorage:", error);
+    }
   }
 }
