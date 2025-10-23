@@ -14,6 +14,8 @@ export interface GameStartData {
   players: NetworkPlayer[];
   terrain: number[];
   currentPlayer: number;
+  windSpeed: number;
+  playerLastWinds: [number, number][];
 }
 
 export class NetworkManager {
@@ -33,6 +35,8 @@ export class NetworkManager {
     currentPlayer: number;
     players: NetworkPlayer[];
     terrain: number[];
+    windSpeed: number;
+    playerLastWinds: [number, number][];
   }) => void;
   public onGameOver?: (data: { winner: NetworkPlayer }) => void;
   public onOpponentDisconnected?: () => void;

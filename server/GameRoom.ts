@@ -14,11 +14,19 @@ export class GameRoom {
   terrain: number[] = [];
   domePositions: { x: number; y: number }[] = [];
   maxPlayers: number;
+  windSpeed: number = 0; // -100 to 100 (negative = left, positive = right)
+  playerLastWinds: Map<number, number> = new Map(); // Track each player's last wind
 
   constructor(roomId: string, maxPlayers: number = 2) {
     this.roomId = roomId;
     this.maxPlayers = maxPlayers;
     this.generateTerrain();
+    this.generateWind();
+  }
+
+  private generateWind(): void {
+    // Generate random wind between -100 and 100
+    this.windSpeed = Math.floor(Math.random() * 201) - 100;
   }
 
   private generateTerrain(): void {
@@ -99,7 +107,14 @@ export class GameRoom {
   }
 
   nextTurn(): void {
+    // Store current wind for this player
+    this.playerLastWinds.set(this.currentPlayer, this.windSpeed);
+
+    // Move to next player
     this.currentPlayer = (this.currentPlayer % this.maxPlayers) + 1;
+
+    // Generate new wind for the new turn
+    this.generateWind();
   }
 
   checkWinner(): Player | null {

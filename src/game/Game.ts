@@ -97,7 +97,12 @@ export class Game {
   private update(deltaTime: number): void {
     // Update projectile if in flight
     if (this.projectile && this.gameState.projectileInFlight) {
-      this.physics.updateProjectile(this.projectile, deltaTime);
+      // Apply wind to projectile physics
+      this.physics.updateProjectile(
+        this.projectile,
+        deltaTime,
+        this.gameState.windSpeed
+      );
 
       // Check if projectile is out of bounds or hit ground
       if (this.checkProjectileCollision()) {

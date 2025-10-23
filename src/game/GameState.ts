@@ -8,6 +8,8 @@ export class GameState {
   domes: Dome[] = [];
   terrain: Terrain;
   players: NetworkPlayer[] = [];
+  windSpeed: number = 0; // Current wind (-100 to 100)
+  playerLastWinds: Map<number, number> = new Map(); // Each player's previous wind
 
   constructor(gameData?: GameStartData) {
     this.terrain = new Terrain();
@@ -22,6 +24,8 @@ export class GameState {
   private initializeFromNetwork(gameData: GameStartData): void {
     this.players = gameData.players;
     this.currentPlayer = gameData.currentPlayer;
+    this.windSpeed = gameData.windSpeed;
+    this.playerLastWinds = new Map(gameData.playerLastWinds);
 
     // Set terrain from server
     this.terrain.setFromArray(gameData.terrain);
@@ -41,6 +45,7 @@ export class GameState {
     console.log("Game initialized with network data", {
       players: this.players,
       currentPlayer: this.currentPlayer,
+      windSpeed: this.windSpeed,
     });
   }
 
@@ -110,9 +115,13 @@ export class GameState {
     currentPlayer: number;
     players: NetworkPlayer[];
     terrain: number[];
+    windSpeed: number;
+    playerLastWinds: [number, number][];
   }): void {
     this.currentPlayer = data.currentPlayer;
     this.players = data.players;
+    this.windSpeed = data.windSpeed;
+    this.playerLastWinds = new Map(data.playerLastWinds);
 
     // Update terrain
     this.terrain.setFromArray(data.terrain);
@@ -177,6 +186,9 @@ export class GameState {
       });
     }
 
+    // Update wind display
+    this.updateWindDisplay(localPlayerId);
+
     // Update turn indicator
     const isMyTurn = this.isLocalPlayerTurn(localPlayerId);
     const turnIndicator = document.getElementById("turn-indicator");
@@ -198,6 +210,62 @@ export class GameState {
           : "Waiting for opponent...";
         controls.style.display = "none";
       }
+    }
+  }
+
+  private updateWindDisplay(localPlayerId: string): void {
+    const currentWindElement = document.getElementById("current-wind");
+    const lastWindElement = document.getElementById("last-wind");
+
+    if (currentWindElement) {
+      const windText = this.formatWind(this.windSpeed);
+      currentWindElement.textContent = windText;
+
+      // Update color class
+      currentWindElement.className = "wind-value";
+      if (this.windSpeed < -10) {
+        currentWindElement.classList.add("wind-left");
+      } else if (this.windSpeed > 10) {
+        currentWindElement.classList.add("wind-right");
+      } else {
+        currentWindElement.classList.add("wind-none");
+      }
+    }
+
+    if (lastWindElement) {
+      // Get local player's number
+      const localPlayer = this.players.find((p) => p.id === localPlayerId);
+      if (localPlayer) {
+        const lastWind = this.playerLastWinds.get(localPlayer.playerNumber);
+        if (lastWind !== undefined) {
+          const windText = this.formatWind(lastWind);
+          lastWindElement.textContent = windText;
+
+          // Update color class
+          lastWindElement.className = "wind-value";
+          if (lastWind < -10) {
+            lastWindElement.classList.add("wind-left");
+          } else if (lastWind > 10) {
+            lastWindElement.classList.add("wind-right");
+          } else {
+            lastWindElement.classList.add("wind-none");
+          }
+        } else {
+          lastWindElement.textContent = "N/A";
+          lastWindElement.className = "wind-value wind-none";
+        }
+      }
+    }
+  }
+
+  private formatWind(windSpeed: number): string {
+    const absWind = Math.abs(windSpeed);
+    if (windSpeed < -10) {
+      return `← ${absWind}`;
+    } else if (windSpeed > 10) {
+      return `${absWind} →`;
+    } else {
+      return "~ 0 ~";
     }
   }
 }

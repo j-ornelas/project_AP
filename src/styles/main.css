@@ -132,6 +132,48 @@ body {
   50% { opacity: 0.7; }
 }
 
+#wind-display {
+  display: flex;
+  gap: 15px;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 15px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.wind-section {
+  flex: 1;
+  text-align: center;
+}
+
+.wind-label {
+  color: #aaa;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.wind-value {
+  color: white;
+  font-size: 1.1em;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.wind-value.wind-left {
+  color: #64B5F6;
+}
+
+.wind-value.wind-right {
+  color: #FFB74D;
+}
+
+.wind-value.wind-none {
+  color: #9E9E9E;
+}
+
 .stats {
   display: flex;
   gap: 15px;

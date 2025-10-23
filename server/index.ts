@@ -111,6 +111,8 @@ io.on("connection", (socket) => {
         players: gameRoom.players,
         terrain: gameRoom.terrain,
         currentPlayer: 1,
+        windSpeed: gameRoom.windSpeed,
+        playerLastWinds: Array.from(gameRoom.playerLastWinds.entries()),
       });
 
       console.log(`Game started: ${roomId} with ${playerCount} players`);
@@ -159,6 +161,8 @@ io.on("connection", (socket) => {
       currentPlayer: gameRoom.currentPlayer,
       players: gameRoom.players,
       terrain: gameRoom.terrain,
+      windSpeed: gameRoom.windSpeed,
+      playerLastWinds: Array.from(gameRoom.playerLastWinds.entries()),
     });
   });
 
