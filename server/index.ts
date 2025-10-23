@@ -111,13 +111,16 @@ io.on("connection", (socket) => {
         gamePlayers.forEach((player, index) => {
           const playerSocket = io.sockets.sockets.get(player.socketId);
           if (playerSocket) {
-            // Calculate health based on dome type
+            // Calculate health and gold based on dome type
             let health = 100;
+            let goldPerTurn = 100;
             const domeType = player.domeType || "boomer";
             if (domeType === "yamazaki") {
               health = 75;
+              goldPerTurn = 100; // Same gold generation
             } else if (domeType === "jagdpanzer") {
               health = 150;
+              goldPerTurn = 100; // Same gold generation
             }
 
             const playerData = {
@@ -127,6 +130,7 @@ io.on("connection", (socket) => {
               playerNumber: index + 1,
               health: health,
               domeType: domeType,
+              goldPerTurn: goldPerTurn,
             };
 
             gameRoom.addPlayer(playerData);

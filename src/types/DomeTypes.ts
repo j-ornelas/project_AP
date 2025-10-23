@@ -4,8 +4,10 @@ export interface DomeTypeConfig {
   description: string;
   healthMultiplier: number;
   movementMultiplier: number;
+  goldMultiplier: number;
   baseHealth: number;
   baseMovement: number;
+  baseGoldPerTurn: number;
 }
 
 export const DOME_TYPES: Record<string, DomeTypeConfig> = {
@@ -15,8 +17,10 @@ export const DOME_TYPES: Record<string, DomeTypeConfig> = {
     description: "Balanced stats - Jack of all trades",
     healthMultiplier: 1.0,
     movementMultiplier: 1.0,
+    goldMultiplier: 1.0,
     baseHealth: 100,
     baseMovement: 80,
+    baseGoldPerTurn: 100,
   },
   yamazaki: {
     id: "yamazaki",
@@ -24,8 +28,10 @@ export const DOME_TYPES: Record<string, DomeTypeConfig> = {
     description: "High mobility, lower health",
     healthMultiplier: 0.75,
     movementMultiplier: 2.0,
+    goldMultiplier: 1.0,
     baseHealth: 100,
     baseMovement: 80,
+    baseGoldPerTurn: 100,
   },
   jagdpanzer: {
     id: "jagdpanzer",
@@ -33,19 +39,23 @@ export const DOME_TYPES: Record<string, DomeTypeConfig> = {
     description: "Heavy armor, slow movement",
     healthMultiplier: 1.5,
     movementMultiplier: 0.2,
+    goldMultiplier: 1.0,
     baseHealth: 100,
     baseMovement: 80,
+    baseGoldPerTurn: 100,
   },
 };
 
 export function getDomeStats(domeTypeId: string): {
   health: number;
   movement: number;
+  goldPerTurn: number;
 } {
   const config = DOME_TYPES[domeTypeId] || DOME_TYPES.boomer;
   return {
     health: Math.floor(config.baseHealth * config.healthMultiplier),
     movement: Math.floor(config.baseMovement * config.movementMultiplier),
+    goldPerTurn: Math.floor(config.baseGoldPerTurn * config.goldMultiplier),
   };
 }
 

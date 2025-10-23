@@ -6,6 +6,8 @@ export interface Player {
   health?: number;
   position?: { x: number; y: number };
   domeType?: string;
+  gold?: number;
+  goldPerTurn?: number;
 }
 
 export class GameRoom {
@@ -73,8 +75,10 @@ export class GameRoom {
     const position = this.domePositions[this.players.length];
     this.players.push({
       ...player,
-      health: 100,
+      health: player.health || 100,
       position,
+      gold: 0, // Start with 0 gold
+      goldPerTurn: player.goldPerTurn || 100, // Use provided goldPerTurn or default
     });
   }
 
@@ -113,6 +117,18 @@ export class GameRoom {
 
     // Move to next player
     this.currentPlayer = (this.currentPlayer % this.maxPlayers) + 1;
+
+    // Award gold to the new current player
+    const currentPlayer = this.players.find(
+      (p) => p.playerNumber === this.currentPlayer
+    );
+    if (
+      currentPlayer &&
+      currentPlayer.gold !== undefined &&
+      currentPlayer.goldPerTurn !== undefined
+    ) {
+      currentPlayer.gold += currentPlayer.goldPerTurn;
+    }
 
     // Generate new wind for the new turn
     this.generateWind();

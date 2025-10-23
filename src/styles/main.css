@@ -84,8 +84,24 @@ body {
 .player-name {
   font-size: 1.2em;
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-align: center;
+}
+
+.player-gold {
+  color: #ffd700;
+  font-size: 0.9em;
+  margin-bottom: 6px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.player-gold::before {
+  content: "💰";
+  font-size: 0.8em;
 }
 
 .player-health-bar {

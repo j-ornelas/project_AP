@@ -8,6 +8,7 @@ export interface NetworkPlayer {
   health?: number;
   position?: { x: number; y: number };
   domeType?: string;
+  gold?: number;
 }
 
 export interface GameStartData {

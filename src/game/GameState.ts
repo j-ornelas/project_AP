@@ -42,9 +42,11 @@ export class GameState {
         player.position?.x || 0,
         player.position?.y || 0,
         player.color,
-        stats.movement
+        stats.movement,
+        stats.goldPerTurn
       );
       dome.health = player.health || stats.health;
+      dome.gold = player.gold || 0;
       return dome;
     });
 
@@ -155,10 +157,12 @@ export class GameState {
   }
 
   resetTurnFlags(): void {
-    // Reset movement points at the start of each turn
-    this.domes.forEach((dome) => {
-      dome.resetMovementPoints();
-    });
+    // Reset movement points and award gold at the start of each turn
+    const currentDome = this.getCurrentDome();
+    if (currentDome) {
+      currentDome.resetMovementPoints();
+      currentDome.awardGold();
+    }
   }
 
   getTerrainHeight(x: number): number {
@@ -211,11 +215,12 @@ export class GameState {
     // Update terrain
     this.terrain.setFromArray(data.terrain);
 
-    // Update dome health and positions
+    // Update dome health, gold, and positions
     data.players.forEach((player) => {
       const domeIndex = player.playerNumber - 1;
       if (this.domes[domeIndex]) {
         this.domes[domeIndex].health = player.health || 100;
+        this.domes[domeIndex].gold = player.gold || 0;
         if (player.position) {
           this.domes[domeIndex].x = player.position.x;
           this.domes[domeIndex].y = player.position.y;
@@ -266,6 +271,10 @@ export class GameState {
         playerNameDiv.style.color = sanitizeColor(player.color);
         playerNameDiv.textContent = player.name; // textContent auto-escapes
 
+        const goldDiv = document.createElement("div");
+        goldDiv.className = "player-gold";
+        goldDiv.textContent = `${player.gold || 0}g`;
+
         const healthBar = document.createElement("div");
         healthBar.className = "player-health-bar";
 
@@ -276,6 +285,7 @@ export class GameState {
 
         healthBar.appendChild(healthFill);
         playerCard.appendChild(playerNameDiv);
+        playerCard.appendChild(goldDiv);
         playerCard.appendChild(healthBar);
 
         playersDisplay.appendChild(playerCard);
