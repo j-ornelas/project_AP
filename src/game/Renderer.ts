@@ -51,13 +51,25 @@ export class Renderer {
     this.ctx.stroke();
   }
 
-  drawDomes(domes: Dome[]): void {
+  drawDomes(
+    domes: Dome[],
+    currentPlayer?: number,
+    currentAngle?: number | null
+  ): void {
     domes.forEach((dome) => {
-      this.drawDome(dome);
+      const showTurret =
+        dome.playerId === currentPlayer &&
+        currentAngle !== null &&
+        currentAngle !== undefined;
+      this.drawDome(dome, showTurret, currentAngle || 0);
     });
   }
 
-  private drawDome(dome: Dome): void {
+  private drawDome(
+    dome: Dome,
+    showTurret: boolean = false,
+    angle: number = 45
+  ): void {
     const { x, y, radius, color, health } = dome;
 
     // Draw dome structure
@@ -97,6 +109,55 @@ export class Renderer {
     this.ctx.font = "bold 16px Arial";
     this.ctx.textAlign = "center";
     this.ctx.fillText(`P${dome.playerId}`, x, y + 10);
+
+    // Draw turret if this is the current player
+    if (showTurret) {
+      this.drawTurret(x, y - radius, angle, color);
+    }
+  }
+
+  private drawTurret(x: number, y: number, angle: number, color: string): void {
+    const angleRad = (angle * Math.PI) / 180;
+    const turretLength = 30;
+    const turretWidth = 4;
+
+    // Calculate turret end point
+    const endX = x + Math.cos(angleRad) * turretLength;
+    const endY = y - Math.sin(angleRad) * turretLength;
+
+    // Draw turret barrel
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = turretWidth;
+    this.ctx.lineCap = "round";
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(endX, endY);
+    this.ctx.stroke();
+
+    // Draw turret tip (dot at the end)
+    this.ctx.fillStyle = color;
+    this.ctx.beginPath();
+    this.ctx.arc(endX, endY, turretWidth, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Draw aiming line (faint line showing trajectory)
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = 1;
+    this.ctx.setLineDash([5, 5]);
+    this.ctx.globalAlpha = 0.5;
+
+    const aimLineLength = 150;
+    const aimEndX = x + Math.cos(angleRad) * aimLineLength;
+    const aimEndY = y - Math.sin(angleRad) * aimLineLength;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(endX, endY);
+    this.ctx.lineTo(aimEndX, aimEndY);
+    this.ctx.stroke();
+
+    // Reset line dash and alpha
+    this.ctx.setLineDash([]);
+    this.ctx.globalAlpha = 1.0;
   }
 
   drawProjectile(projectile: Projectile): void {

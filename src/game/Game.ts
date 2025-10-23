@@ -19,6 +19,7 @@ export class Game {
   private projectile: Projectile | null = null;
   private networkManager: NetworkManager;
   private localPlayerId: string;
+  private inputHandler: InputHandler;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -34,7 +35,7 @@ export class Game {
     this.physics = new Physics();
 
     // Initialize input handler
-    new InputHandler(this);
+    this.inputHandler = new InputHandler(this);
 
     this.setupNetworkHandlers();
     this.resize();
@@ -153,7 +154,16 @@ export class Game {
   private render(): void {
     this.renderer.clear();
     this.renderer.drawTerrain(this.gameState.terrain);
-    this.renderer.drawDomes(this.gameState.domes);
+
+    // Get current angle for turret display
+    const currentAngle = this.isMyTurn()
+      ? this.inputHandler.getCurrentAngle()
+      : null;
+    this.renderer.drawDomes(
+      this.gameState.domes,
+      this.gameState.currentPlayer,
+      currentAngle
+    );
 
     if (this.projectile) {
       this.renderer.drawProjectile(this.projectile);

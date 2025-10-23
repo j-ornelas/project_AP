@@ -10,6 +10,10 @@ export class InputHandler {
     this.setupEventListeners();
   }
 
+  getCurrentAngle(): number {
+    return this.angle;
+  }
+
   private setupEventListeners(): void {
     // Power slider
     const powerSlider = document.getElementById(
@@ -94,10 +98,10 @@ export class InputHandler {
         this.adjustPower(-1);
         break;
       case "ArrowRight":
-        this.adjustAngle(1);
+        this.adjustAngle(-1); // Decrease angle = move turret right
         break;
       case "ArrowLeft":
-        this.adjustAngle(-1);
+        this.adjustAngle(1); // Increase angle = move turret left
         break;
       case " ":
       case "Enter":
