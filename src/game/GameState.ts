@@ -157,11 +157,13 @@ export class GameState {
   }
 
   resetTurnFlags(): void {
-    // Reset movement points and award gold at the start of each turn
+    // Reset movement points, award gold, and clear items at the start of each turn
     const currentDome = this.getCurrentDome();
     if (currentDome) {
       currentDome.resetMovementPoints();
       currentDome.awardGold();
+      currentDome.clearActiveItems(); // Clear purchased items from previous turn
+      currentDome.hasShield = false; // Clear shield
     }
   }
 
@@ -169,20 +171,37 @@ export class GameState {
     return this.terrain.getHeight(x);
   }
 
-  createCrater(x: number): void {
-    this.terrain.createCrater(x, 50); // Crater radius of 50 pixels
+  createCrater(x: number, isDigger: boolean = false): void {
+    const radius = 50;
+    const depth = isDigger ? radius * 3 : radius; // 3x depth for digger
+    this.terrain.createCrater(x, depth);
   }
 
-  checkDomeHit(projectileX: number): { damage: number; hitPlayerId?: string } {
+  checkDomeHit(
+    projectileX: number,
+    isNuke: boolean = false
+  ): { damage: number; hitPlayerId?: string; shieldAbsorbed: boolean } {
     let totalDamage = 0;
     let hitPlayerId: string | undefined;
+    let shieldAbsorbed = false;
+
+    const hitRadius = isNuke ? 180 : 60; // 3x radius for nuke (60 * 3 = 180)
+    const baseDamage = isNuke ? 100 : 50; // 2x damage for nuke
 
     this.domes.forEach((dome, index) => {
       const distance = Math.abs(dome.x - projectileX);
 
-      if (distance < 60) {
+      if (distance < hitRadius) {
+        // Check for shield
+        if (dome.hasShield) {
+          dome.hasShield = false; // Shield is consumed
+          shieldAbsorbed = true;
+          console.log(`Player ${dome.playerId}'s shield absorbed the hit!`);
+          return; // No damage or terrain change
+        }
+
         // Direct hit radius
-        const damage = Math.max(20, 50 - distance);
+        const damage = Math.max(20, baseDamage - distance);
         dome.takeDamage(damage);
         totalDamage += damage;
 
@@ -197,7 +216,7 @@ export class GameState {
       }
     });
 
-    return { damage: totalDamage, hitPlayerId };
+    return { damage: totalDamage, hitPlayerId, shieldAbsorbed };
   }
 
   updateFromNetwork(data: {
@@ -319,7 +338,7 @@ export class GameState {
     }
   }
 
-  private updateWindDisplay(localPlayerId: string): void {
+  updateWindDisplay(localPlayerId: string): void {
     const currentWindElement = document.getElementById("current-wind");
     const lastWindElement = document.getElementById("last-wind");
 

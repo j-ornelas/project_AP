@@ -48,8 +48,8 @@ export class LobbyScreen {
           <div class="form-group">
             <label for="player-count">Number of Players:</label>
             <div class="player-count-selector">
-              <button class="count-btn" data-count="2">2</button>
-              <button class="count-btn active" data-count="3">3</button>
+              <button class="count-btn active" data-count="2">2</button>
+              <button class="count-btn" data-count="3">3</button>
               <button class="count-btn" data-count="4">4</button>
               <button class="count-btn" data-count="5">5</button>
               <button class="count-btn" data-count="6">6</button>
@@ -83,6 +83,15 @@ export class LobbyScreen {
                 </div>
                 <div class="dome-desc">Heavy Tank</div>
               </button>
+              <button class="dome-btn" data-dome="char">
+                <div class="dome-name">Char</div>
+                <div class="dome-stats">
+                  <span>❤️ 20</span>
+                  <span>🏃 80</span>
+                  <span>💰 250</span>
+                </div>
+                <div class="dome-desc">Glass Cannon</div>
+              </button>
             </div>
           </div>
           
@@ -102,9 +111,17 @@ export class LobbyScreen {
   }
 
   private setupEventListeners(lobby: HTMLElement): void {
-    let selectedColor = "#F44336";
-    let selectedPlayerCount = 3;
-    let selectedDomeType = "boomer";
+    // Read initial values from UI (which may have been set by loadSavedPreferences)
+    const activeColorBtn = lobby.querySelector(".color-btn.active");
+    let selectedColor = activeColorBtn?.getAttribute("data-color") || "#F44336";
+
+    const activeCountBtn = lobby.querySelector(".count-btn.active");
+    let selectedPlayerCount = parseInt(
+      activeCountBtn?.getAttribute("data-count") || "2"
+    );
+
+    const activeDomeBtn = lobby.querySelector(".dome-btn.active");
+    let selectedDomeType = activeDomeBtn?.getAttribute("data-dome") || "boomer";
 
     // Color selection
     const colorButtons = lobby.querySelectorAll(".color-btn");

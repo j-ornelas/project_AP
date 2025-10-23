@@ -8,11 +8,22 @@ export class Projectile {
   velocity: Vector2;
   trail: Vector2[] = [];
   private maxTrailLength: number = 20;
+  isNuke: boolean = false; // 3x radius, 2x damage
+  isDigger: boolean = false; // 3x crater depth
 
-  constructor(x: number, y: number, vx: number, vy: number) {
+  constructor(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    isNuke = false,
+    isDigger = false
+  ) {
     this.position = { x, y, radius: 6 };
     this.velocity = { x: vx, y: vy };
     this.trail.push({ x, y });
+    this.isNuke = isNuke;
+    this.isDigger = isDigger;
   }
 
   addTrailPoint(): void {

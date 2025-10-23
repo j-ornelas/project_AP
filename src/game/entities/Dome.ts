@@ -1,3 +1,5 @@
+import { ActiveItems } from "../../types/StoreItems";
+
 export class Dome {
   playerId: number;
   x: number;
@@ -9,6 +11,8 @@ export class Dome {
   movementPointsRemaining: number; // Current movement points available this turn
   gold: number = 0; // Current gold balance
   goldPerTurn: number; // Gold earned at the start of each turn
+  activeItems: ActiveItems = { offensive: null, defensive: null }; // Items purchased this turn
+  hasShield: boolean = false; // Shield status
 
   constructor(
     playerId: number,
@@ -33,6 +37,10 @@ export class Dome {
 
   awardGold(): void {
     this.gold += this.goldPerTurn;
+  }
+
+  clearActiveItems(): void {
+    this.activeItems = { offensive: null, defensive: null };
   }
 
   canMove(): boolean {

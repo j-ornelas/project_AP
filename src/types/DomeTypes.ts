@@ -44,6 +44,17 @@ export const DOME_TYPES: Record<string, DomeTypeConfig> = {
     baseMovement: 80,
     baseGoldPerTurn: 100,
   },
+  char: {
+    id: "char",
+    name: "Char",
+    description: "Glass cannon - High income, low health",
+    healthMultiplier: 0.2,
+    movementMultiplier: 1.0,
+    goldMultiplier: 2.5,
+    baseHealth: 100,
+    baseMovement: 80,
+    baseGoldPerTurn: 100,
+  },
 };
 
 export function getDomeStats(domeTypeId: string): {

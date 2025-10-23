@@ -1,3 +1,8 @@
+export interface ActiveItems {
+  offensive: string | null;
+  defensive: string | null;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -8,6 +13,8 @@ export interface Player {
   domeType?: string;
   gold?: number;
   goldPerTurn?: number;
+  activeItems?: ActiveItems;
+  hasShield?: boolean;
 }
 
 export class GameRoom {
@@ -79,6 +86,8 @@ export class GameRoom {
       position,
       gold: 0, // Start with 0 gold
       goldPerTurn: player.goldPerTurn || 100, // Use provided goldPerTurn or default
+      activeItems: { offensive: null, defensive: null },
+      hasShield: false,
     });
   }
 

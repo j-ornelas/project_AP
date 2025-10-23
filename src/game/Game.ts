@@ -8,6 +8,8 @@ import {
   GameStartData,
   NetworkPlayer,
 } from "../network/NetworkManager";
+import { StoreUI } from "../ui/StoreUI";
+import { getItem } from "../types/StoreItems";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -21,6 +23,7 @@ export class Game {
   private localPlayerId: string;
   private inputHandler: InputHandler;
   private movementMode: boolean = false; // Track if in movement mode
+  private storeUI: StoreUI;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -38,8 +41,93 @@ export class Game {
     // Initialize input handler
     this.inputHandler = new InputHandler(this);
 
+    // Initialize store UI
+    this.storeUI = new StoreUI();
+    this.setupStoreHandlers();
+
     this.setupNetworkHandlers();
     this.resize();
+  }
+
+  private setupStoreHandlers(): void {
+    const storeButton = document.getElementById("store-button");
+    storeButton?.addEventListener("click", () => {
+      if (!this.isMyTurn()) return;
+
+      const currentDome = this.gameState.getCurrentDome();
+      if (!currentDome) return;
+
+      this.storeUI.show(currentDome.gold, currentDome.activeItems, (itemId) =>
+        this.handleItemPurchase(itemId)
+      );
+    });
+  }
+
+  private handleItemPurchase(itemId: string): void {
+    const currentDome = this.gameState.getCurrentDome();
+    if (!currentDome) return;
+
+    const item = getItem(itemId);
+    if (!item) return;
+
+    // Check if refunding (already purchased)
+    const isRefund = currentDome.activeItems[item.category] === itemId;
+
+    if (isRefund) {
+      // Repair cannot be refunded (healing already applied)
+      if (itemId === "repair") {
+        console.log("Repair cannot be refunded - healing already applied");
+        return;
+      }
+
+      // Refund
+      currentDome.gold += item.cost;
+      currentDome.activeItems[item.category] = null;
+
+      // Remove shield if refunding shield
+      if (itemId === "shield") {
+        currentDome.hasShield = false;
+      }
+    } else {
+      // Purchase
+      if (currentDome.gold < item.cost) return;
+      if (currentDome.activeItems[item.category] !== null) return;
+
+      currentDome.gold -= item.cost;
+      currentDome.activeItems[item.category] = itemId;
+
+      // Apply immediate effects
+      this.applyItemEffect(itemId, currentDome);
+    }
+
+    // Update store UI with new state
+    this.storeUI.show(currentDome.gold, currentDome.activeItems, (itemId) =>
+      this.handleItemPurchase(itemId)
+    );
+    this.updateUI();
+
+    // Sync with server
+    this.networkManager.reportItemPurchase(itemId, !isRefund);
+  }
+
+  private applyItemEffect(itemId: string, dome: any): void {
+    switch (itemId) {
+      case "shield":
+        dome.hasShield = true;
+        break;
+      case "repair":
+        dome.health = Math.min(dome.health + 30, 100);
+        break;
+      case "targeting_computer":
+        // Set wind to player's last wind
+        const lastWind = this.gameState.playerLastWinds.get(dome.playerId);
+        if (lastWind !== undefined) {
+          this.gameState.windSpeed = lastWind;
+          this.gameState.updateWindDisplay(this.localPlayerId);
+        }
+        break;
+      // Offensive items are applied when firing
+    }
   }
 
   private setupNetworkHandlers(): void {
@@ -147,7 +235,15 @@ export class Game {
     const impactY = this.projectile.position.y;
 
     // Check for dome hits and get damage/hit player
-    const hitResult = this.gameState.checkDomeHit(impactX);
+    const hitResult = this.gameState.checkDomeHit(
+      impactX,
+      this.projectile.isNuke
+    );
+
+    // Only create crater if shield didn't absorb
+    if (!hitResult.shieldAbsorbed) {
+      this.gameState.createCrater(impactX, this.projectile.isDigger);
+    }
 
     // Only the current player (who fired) should report the impact
     // This prevents multiple clients from reporting the same impact
@@ -156,7 +252,8 @@ export class Game {
         impactX,
         impactY,
         hitResult.damage,
-        hitResult.hitPlayerId
+        hitResult.hitPlayerId,
+        hitResult.shieldAbsorbed
       );
     }
 

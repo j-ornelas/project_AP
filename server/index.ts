@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
         ? playerColor
         : "#4CAF50";
 
-      const validDomeTypes = ["boomer", "yamazaki", "jagdpanzer"];
+      const validDomeTypes = ["boomer", "yamazaki", "jagdpanzer", "char"];
       const sanitizedDomeType = validDomeTypes.includes(domeType)
         ? domeType
         : "boomer";
@@ -117,10 +117,13 @@ io.on("connection", (socket) => {
             const domeType = player.domeType || "boomer";
             if (domeType === "yamazaki") {
               health = 75;
-              goldPerTurn = 100; // Same gold generation
+              goldPerTurn = 100;
             } else if (domeType === "jagdpanzer") {
               health = 150;
-              goldPerTurn = 100; // Same gold generation
+              goldPerTurn = 100;
+            } else if (domeType === "char") {
+              health = 20;
+              goldPerTurn = 250;
             }
 
             const playerData = {
@@ -155,8 +158,22 @@ io.on("connection", (socket) => {
     }
   );
 
+  // Handle item purchases
+  socket.on("itemPurchase", ({ roomId, itemId, isPurchase }) => {
+    const gameRoom = gameRooms.get(roomId);
+    if (!gameRoom) return;
+
+    const player = gameRoom.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Basic validation would go here
+    console.log(
+      `Player ${player.name} ${isPurchase ? "purchased" : "refunded"} ${itemId}`
+    );
+  });
+
   // Player fires a shot
-  socket.on("fire", ({ roomId, power, angle }) => {
+  socket.on("fire", ({ roomId, power, angle, offensiveItem }) => {
     const gameRoom = gameRooms.get(roomId);
     if (!gameRoom) return;
 
@@ -165,6 +182,7 @@ io.on("connection", (socket) => {
       playerId: socket.id,
       power,
       angle,
+      offensiveItem,
     });
   });
 
@@ -192,38 +210,44 @@ io.on("connection", (socket) => {
   });
 
   // Projectile impact (sent by the client who calculated it)
-  socket.on("projectileImpact", ({ roomId, x, damage, hitPlayerId }) => {
-    const gameRoom = gameRooms.get(roomId);
-    if (!gameRoom) return;
+  socket.on(
+    "projectileImpact",
+    ({ roomId, x, damage, hitPlayerId, shieldAbsorbed }) => {
+      const gameRoom = gameRooms.get(roomId);
+      if (!gameRoom) return;
 
-    // Update game state
-    if (hitPlayerId && damage > 0) {
-      gameRoom.damagePlayer(hitPlayerId, damage);
+      // If shield absorbed, skip damage and terrain changes
+      if (!shieldAbsorbed) {
+        // Update game state
+        if (hitPlayerId && damage > 0) {
+          gameRoom.damagePlayer(hitPlayerId, damage);
+        }
+
+        // Update terrain with crater
+        gameRoom.addCrater(x);
+      }
+
+      // Check for winner
+      const winner = gameRoom.checkWinner();
+      if (winner) {
+        io.to(roomId).emit("gameOver", { winner });
+        gameRooms.delete(roomId);
+        return;
+      }
+
+      // Switch turns
+      gameRoom.nextTurn();
+
+      // Broadcast updated game state
+      io.to(roomId).emit("turnChange", {
+        currentPlayer: gameRoom.currentPlayer,
+        players: gameRoom.players,
+        terrain: gameRoom.terrain,
+        windSpeed: gameRoom.windSpeed,
+        playerLastWinds: Array.from(gameRoom.playerLastWinds.entries()),
+      });
     }
-
-    // Update terrain with crater
-    gameRoom.addCrater(x);
-
-    // Check for winner
-    const winner = gameRoom.checkWinner();
-    if (winner) {
-      io.to(roomId).emit("gameOver", { winner });
-      gameRooms.delete(roomId);
-      return;
-    }
-
-    // Switch turns
-    gameRoom.nextTurn();
-
-    // Broadcast updated game state
-    io.to(roomId).emit("turnChange", {
-      currentPlayer: gameRoom.currentPlayer,
-      players: gameRoom.players,
-      terrain: gameRoom.terrain,
-      windSpeed: gameRoom.windSpeed,
-      playerLastWinds: Array.from(gameRoom.playerLastWinds.entries()),
-    });
-  });
+  );
 
   // Handle disconnect
   socket.on("disconnect", () => {

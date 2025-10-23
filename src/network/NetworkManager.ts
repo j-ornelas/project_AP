@@ -123,9 +123,14 @@ export class NetworkManager {
     });
   }
 
-  fire(power: number, angle: number): void {
+  fire(power: number, angle: number, offensiveItem?: string | null): void {
     if (!this.roomId) return;
-    this.socket.emit("fire", { roomId: this.roomId, power, angle });
+    this.socket.emit("fire", {
+      roomId: this.roomId,
+      power,
+      angle,
+      offensiveItem,
+    });
   }
 
   reportDomeMove(playerNumber: number, newX: number, newY: number): void {
@@ -142,7 +147,8 @@ export class NetworkManager {
     x: number,
     _y: number,
     damage: number,
-    hitPlayerId?: string
+    hitPlayerId?: string,
+    shieldAbsorbed?: boolean
   ): void {
     if (!this.roomId) return;
     this.socket.emit("projectileImpact", {
@@ -150,6 +156,16 @@ export class NetworkManager {
       x,
       damage,
       hitPlayerId,
+      shieldAbsorbed,
+    });
+  }
+
+  reportItemPurchase(itemId: string, isPurchase: boolean): void {
+    if (!this.roomId) return;
+    this.socket.emit("itemPurchase", {
+      roomId: this.roomId,
+      itemId,
+      isPurchase,
     });
   }
 
