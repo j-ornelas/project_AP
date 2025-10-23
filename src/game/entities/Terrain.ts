@@ -22,6 +22,11 @@ export class Terrain {
     }
   }
 
+  setFromArray(points: number[]): void {
+    this.points = [...points];
+    this.width = points.length;
+  }
+
   getHeight(x: number): number {
     const index = Math.floor(x);
 

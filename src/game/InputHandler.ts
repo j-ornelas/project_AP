@@ -81,6 +81,11 @@ export class InputHandler {
       return;
     }
 
+    // Check if it's the player's turn
+    if (!this.game.isMyTurn()) {
+      return;
+    }
+
     switch (e.key) {
       case "ArrowUp":
         this.adjustPower(1);

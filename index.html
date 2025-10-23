@@ -10,14 +10,19 @@
   <div id="game-container">
     <div id="ui-overlay">
       <div id="game-info">
-        <div id="player-info">
-          <h2>Player <span id="current-player">1</span></h2>
+        <div id="players-display">
+          <!-- Players will be dynamically generated -->
+        </div>
+        
+        <div id="turn-indicator">
+          <div id="turn-message">Waiting for players...</div>
+        </div>
+
+        <div id="controls" style="display: none;">
           <div class="stats">
             <div>Power: <span id="power-value">50</span>%</div>
             <div>Angle: <span id="angle-value">45</span>°</div>
           </div>
-        </div>
-        <div id="controls">
           <div class="control-group">
             <label for="power-slider">Power:</label>
             <input type="range" id="power-slider" min="10" max="100" value="50">
