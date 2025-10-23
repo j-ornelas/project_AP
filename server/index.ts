@@ -5,10 +5,15 @@ import { GameRoom } from "./GameRoom.js";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Use environment variable for client URL, fallback to localhost for development
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: CLIENT_URL,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 

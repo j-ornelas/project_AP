@@ -38,7 +38,10 @@ export class NetworkManager {
   public onOpponentDisconnected?: () => void;
 
   constructor() {
-    this.socket = io("http://localhost:3001");
+    // Use environment variable for server URL, fallback to localhost for development
+    const serverUrl =
+      import.meta.env.VITE_SERVER_URL || "http://localhost:3001";
+    this.socket = io(serverUrl);
     this.setupListeners();
   }
 

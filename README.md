@@ -97,6 +97,17 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions to Render.
+
+**Quick Deploy:**
+
+1. Push code to GitHub
+2. Connect to Render with Blueprint (`render.yaml`)
+3. Set environment variables (URLs for frontend/backend)
+4. Done! 🚀
+
 ## How to Play
 
 ### Getting Started
