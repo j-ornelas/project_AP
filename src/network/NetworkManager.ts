@@ -7,6 +7,7 @@ export interface NetworkPlayer {
   playerNumber: number;
   health?: number;
   position?: { x: number; y: number };
+  domeType?: string;
 }
 
 export interface GameStartData {
@@ -107,8 +108,18 @@ export class NetworkManager {
     });
   }
 
-  joinGame(playerName: string, playerColor: string, playerCount: number): void {
-    this.socket.emit("joinGame", { playerName, playerColor, playerCount });
+  joinGame(
+    playerName: string,
+    playerColor: string,
+    playerCount: number,
+    domeType: string
+  ): void {
+    this.socket.emit("joinGame", {
+      playerName,
+      playerColor,
+      playerCount,
+      domeType,
+    });
   }
 
   fire(power: number, angle: number): void {

@@ -231,20 +231,12 @@ export class Game {
   }
 
   enterMovementMode(): void {
-    console.log("Attempting to enter movement mode...");
-
     if (!this.isMyTurn()) {
-      console.log("Cannot enter movement mode - not your turn");
       return;
     }
 
     const currentDome = this.getCurrentPlayerDome();
-    console.log("Current dome:", currentDome);
-
     if (!currentDome || !currentDome.canMove()) {
-      console.log(
-        "Cannot enter movement mode - no movement points or dome not found"
-      );
       return;
     }
 
@@ -253,9 +245,6 @@ export class Game {
     this.updateMovementPointsBar();
     const movementBar = document.getElementById("movement-points-bar");
     if (movementBar) movementBar.style.display = "flex";
-    console.log(
-      "✅ Movement mode ACTIVE: Use Arrow Keys (Left/Right) to move, M or ESC to exit"
-    );
   }
 
   exitMovementMode(): void {

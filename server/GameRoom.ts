@@ -5,6 +5,7 @@ export interface Player {
   playerNumber: number;
   health?: number;
   position?: { x: number; y: number };
+  domeType?: string;
 }
 
 export class GameRoom {

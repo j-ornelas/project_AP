@@ -3,11 +3,13 @@ export class LobbyScreen {
   private onJoinCallback?: (
     name: string,
     color: string,
-    playerCount: number
+    playerCount: number,
+    domeType: string
   ) => void;
   private readonly STORAGE_KEY_NAME = "projectAP_playerName";
   private readonly STORAGE_KEY_COLOR = "projectAP_playerColor";
   private readonly STORAGE_KEY_PLAYER_COUNT = "projectAP_playerCount";
+  private readonly STORAGE_KEY_DOME_TYPE = "projectAP_domeType";
 
   constructor() {
     this.container = this.createUI();
@@ -51,6 +53,36 @@ export class LobbyScreen {
               <button class="count-btn" data-count="6">6</button>
             </div>
           </div>
+
+          <div class="form-group">
+            <label>Choose Your Dome:</label>
+            <div class="dome-selector">
+              <button class="dome-btn active" data-dome="boomer">
+                <div class="dome-name">Boomer</div>
+                <div class="dome-stats">
+                  <span>❤️ 100</span>
+                  <span>🏃 80</span>
+                </div>
+                <div class="dome-desc">Balanced</div>
+              </button>
+              <button class="dome-btn" data-dome="yamazaki">
+                <div class="dome-name">Yamazaki</div>
+                <div class="dome-stats">
+                  <span>❤️ 75</span>
+                  <span>🏃 160</span>
+                </div>
+                <div class="dome-desc">Fast & Agile</div>
+              </button>
+              <button class="dome-btn" data-dome="jagdpanzer">
+                <div class="dome-name">Jagdpanzer</div>
+                <div class="dome-stats">
+                  <span>❤️ 150</span>
+                  <span>🏃 16</span>
+                </div>
+                <div class="dome-desc">Heavy Tank</div>
+              </button>
+            </div>
+          </div>
           
           <button id="join-game-btn" class="primary-btn">Find Game</button>
         </div>
@@ -70,6 +102,7 @@ export class LobbyScreen {
   private setupEventListeners(lobby: HTMLElement): void {
     let selectedColor = "#F44336";
     let selectedPlayerCount = 3;
+    let selectedDomeType = "boomer";
 
     // Color selection
     const colorButtons = lobby.querySelectorAll(".color-btn");
@@ -91,6 +124,16 @@ export class LobbyScreen {
       });
     });
 
+    // Dome type selection
+    const domeButtons = lobby.querySelectorAll(".dome-btn");
+    domeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        domeButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedDomeType = btn.getAttribute("data-dome") || "boomer";
+      });
+    });
+
     // Join game button
     const joinBtn = lobby.querySelector("#join-game-btn") as HTMLButtonElement;
     const nameInput = lobby.querySelector("#player-name") as HTMLInputElement;
@@ -99,9 +142,19 @@ export class LobbyScreen {
       const playerName = nameInput.value.trim() || "Player";
 
       // Save preferences to localStorage
-      this.savePreferences(playerName, selectedColor, selectedPlayerCount);
+      this.savePreferences(
+        playerName,
+        selectedColor,
+        selectedPlayerCount,
+        selectedDomeType
+      );
 
-      this.onJoinCallback?.(playerName, selectedColor, selectedPlayerCount);
+      this.onJoinCallback?.(
+        playerName,
+        selectedColor,
+        selectedPlayerCount,
+        selectedDomeType
+      );
     });
 
     // Enter key to join
@@ -142,7 +195,12 @@ export class LobbyScreen {
   }
 
   onJoin(
-    callback: (name: string, color: string, playerCount: number) => void
+    callback: (
+      name: string,
+      color: string,
+      playerCount: number,
+      domeType: string
+    ) => void
   ): void {
     this.onJoinCallback = callback;
   }
@@ -154,7 +212,8 @@ export class LobbyScreen {
   private savePreferences(
     name: string,
     color: string,
-    playerCount: number
+    playerCount: number,
+    domeType: string
   ): void {
     try {
       localStorage.setItem(this.STORAGE_KEY_NAME, name);
@@ -163,6 +222,7 @@ export class LobbyScreen {
         this.STORAGE_KEY_PLAYER_COUNT,
         playerCount.toString()
       );
+      localStorage.setItem(this.STORAGE_KEY_DOME_TYPE, domeType);
     } catch (error) {
       console.warn("Could not save preferences to localStorage:", error);
     }
@@ -216,6 +276,21 @@ export class LobbyScreen {
           if (btnCount === savedPlayerCount) {
             // Remove active from all buttons
             countButtons.forEach((b) => b.classList.remove("active"));
+            // Set this one as active
+            btn.classList.add("active");
+          }
+        });
+      }
+
+      // Load saved dome type
+      const savedDomeType = localStorage.getItem(this.STORAGE_KEY_DOME_TYPE);
+      if (savedDomeType) {
+        const domeButtons = this.container.querySelectorAll(".dome-btn");
+        domeButtons.forEach((btn) => {
+          const btnDome = btn.getAttribute("data-dome");
+          if (btnDome === savedDomeType) {
+            // Remove active from all buttons
+            domeButtons.forEach((b) => b.classList.remove("active"));
             // Set this one as active
             btn.classList.add("active");
           }

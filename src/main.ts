@@ -24,11 +24,11 @@ window.addEventListener("DOMContentLoaded", () => {
   lobbyScreen = new LobbyScreen();
 
   // Handle player joining
-  lobbyScreen.onJoin((playerName, playerColor, playerCount) => {
+  lobbyScreen.onJoin((playerName, playerColor, playerCount, domeType) => {
     console.log(
-      `${playerName} joining with color ${playerColor}, ${playerCount} players`
+      `${playerName} joining with color ${playerColor}, ${playerCount} players, ${domeType} dome`
     );
-    networkManager?.joinGame(playerName, playerColor, playerCount);
+    networkManager?.joinGame(playerName, playerColor, playerCount, domeType);
   });
 
   // Handle waiting for opponent

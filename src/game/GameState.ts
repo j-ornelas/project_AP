@@ -1,6 +1,7 @@
 import { Dome } from "./entities/Dome";
 import { Terrain } from "./entities/Terrain";
 import { GameStartData, NetworkPlayer } from "../network/NetworkManager";
+import { getDomeStats } from "../types/DomeTypes";
 
 export class GameState {
   currentPlayer: number = 1;
@@ -32,14 +33,17 @@ export class GameState {
 
     // Create domes from player data
     this.domes = gameData.players.map((player) => {
+      const domeType = player.domeType || "boomer";
+      const stats = getDomeStats(domeType);
+
       const dome = new Dome(
         player.playerNumber,
         player.position?.x || 0,
         player.position?.y || 0,
         player.color,
-        80 // Default movement range
+        stats.movement
       );
-      dome.health = player.health || 100;
+      dome.health = player.health || stats.health;
       return dome;
     });
 
