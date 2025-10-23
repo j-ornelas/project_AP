@@ -2,7 +2,7 @@
   "name": "dome-wars-game",
   "version": "0.1.0",
   "type": "module",
-  "description": "Browser-based artillery game inspired by Dome Wars",
+  "description": "Browser-based artillery game inspired by old axis/power games",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "client": "vite",
