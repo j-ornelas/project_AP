@@ -35,12 +35,24 @@ io.on("connection", (socket) => {
   socket.on(
     "joinGame",
     ({ playerName, playerColor, playerCount, domeType }) => {
+      // Server-side input validation and sanitization
+      const sanitizedName = (playerName || "Player")
+        .toString()
+        .trim()
+        .substring(0, 20)
+        .replace(/[<>]/g, ""); // Remove < and > to prevent HTML injection
+
+      const sanitizedColor = /^#[0-9A-Fa-f]{6}$/.test(playerColor)
+        ? playerColor
+        : "#4CAF50";
+
+      const validDomeTypes = ["boomer", "yamazaki", "jagdpanzer"];
+      const sanitizedDomeType = validDomeTypes.includes(domeType)
+        ? domeType
+        : "boomer";
+
       console.log(
-        `${playerName} (${
-          socket.id
-        }) wants to join a ${playerCount}-player game with ${
-          domeType || "boomer"
-        }`
+        `${sanitizedName} (${socket.id}) wants to join a ${playerCount}-player game with ${sanitizedDomeType}`
       );
 
       // Validate player count
@@ -51,10 +63,10 @@ io.on("connection", (socket) => {
         return;
       }
 
-      socket.data.playerName = playerName;
-      socket.data.playerColor = playerColor;
+      socket.data.playerName = sanitizedName;
+      socket.data.playerColor = sanitizedColor;
       socket.data.desiredPlayerCount = playerCount;
-      socket.data.domeType = domeType || "boomer";
+      socket.data.domeType = sanitizedDomeType;
 
       // Get or create lobby for this player count
       if (!waitingLobbies.has(playerCount)) {
@@ -66,9 +78,9 @@ io.on("connection", (socket) => {
       // Add player to lobby
       lobby.push({
         socketId: socket.id,
-        name: playerName,
-        color: playerColor,
-        domeType: domeType || "boomer",
+        name: sanitizedName,
+        color: sanitizedColor,
+        domeType: sanitizedDomeType,
       });
 
       console.log(

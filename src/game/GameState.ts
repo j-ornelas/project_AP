@@ -2,6 +2,7 @@ import { Dome } from "./entities/Dome";
 import { Terrain } from "./entities/Terrain";
 import { GameStartData, NetworkPlayer } from "../network/NetworkManager";
 import { getDomeStats } from "../types/DomeTypes";
+import { sanitizeColor } from "../utils/sanitize";
 
 export class GameState {
   currentPlayer: number = 1;
@@ -259,12 +260,23 @@ export class GameState {
           healthColor = "linear-gradient(90deg, #FF9800, #F57C00)";
         }
 
-        playerCard.innerHTML = `
-          <div class="player-name" style="color: ${player.color}">${player.name}</div>
-          <div class="player-health-bar">
-            <div class="health-fill" style="width: ${healthPercent}%; background: ${healthColor}"></div>
-          </div>
-        `;
+        // Create elements safely to prevent XSS
+        const playerNameDiv = document.createElement("div");
+        playerNameDiv.className = "player-name";
+        playerNameDiv.style.color = sanitizeColor(player.color);
+        playerNameDiv.textContent = player.name; // textContent auto-escapes
+
+        const healthBar = document.createElement("div");
+        healthBar.className = "player-health-bar";
+
+        const healthFill = document.createElement("div");
+        healthFill.className = "health-fill";
+        healthFill.style.width = `${healthPercent}%`;
+        healthFill.style.background = healthColor;
+
+        healthBar.appendChild(healthFill);
+        playerCard.appendChild(playerNameDiv);
+        playerCard.appendChild(healthBar);
 
         playersDisplay.appendChild(playerCard);
       });

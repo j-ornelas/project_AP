@@ -1,3 +1,5 @@
+import { sanitizePlayerName } from "../utils/sanitize";
+
 export class LobbyScreen {
   private container: HTMLElement;
   private onJoinCallback?: (
@@ -139,7 +141,8 @@ export class LobbyScreen {
     const nameInput = lobby.querySelector("#player-name") as HTMLInputElement;
 
     joinBtn?.addEventListener("click", () => {
-      const playerName = nameInput.value.trim() || "Player";
+      const rawName = nameInput.value.trim() || "Player";
+      const playerName = sanitizePlayerName(rawName);
 
       // Save preferences to localStorage
       this.savePreferences(
