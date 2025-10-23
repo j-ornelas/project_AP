@@ -36,7 +36,8 @@ export class GameState {
         player.playerNumber,
         player.position?.x || 0,
         player.position?.y || 0,
-        player.color
+        player.color,
+        80 // Default movement range
       );
       dome.health = player.health || 100;
       return dome;
@@ -53,10 +54,10 @@ export class GameState {
     this.currentPlayer = 1;
     this.projectileInFlight = false;
 
-    // Create two domes (players) at opposite ends
+    // Create two domes (players) at opposite ends with movement range
     this.domes = [
-      new Dome(1, 200, 0, "#4CAF50"),
-      new Dome(2, 1000, 0, "#2196F3"),
+      new Dome(1, 200, 0, "#4CAF50", 80),
+      new Dome(2, 1000, 0, "#2196F3", 80),
     ];
 
     // Generate terrain
@@ -74,6 +75,85 @@ export class GameState {
 
   nextTurn(): void {
     this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+  }
+
+  canDomeMove(
+    domeIndex: number,
+    direction: number,
+    distance: number = 2
+  ): { canMove: boolean; reason?: string } {
+    const dome = this.domes[domeIndex];
+    if (!dome) return { canMove: false, reason: "Dome not found" };
+
+    if (dome.movementPointsRemaining <= 0) {
+      return { canMove: false, reason: "No movement points remaining" };
+    }
+
+    // Calculate proposed new position (small incremental move)
+    const proposedX = dome.x + direction * distance;
+
+    // Check if out of bounds
+    if (proposedX < 50 || proposedX > this.terrain.points.length - 50) {
+      return { canMove: false, reason: "Cannot move off edge" };
+    }
+
+    // For small movements, just check immediate terrain steepness
+    const currentX = Math.floor(dome.x);
+    const nextX = Math.floor(proposedX);
+
+    if (
+      currentX !== nextX &&
+      nextX >= 0 &&
+      nextX < this.terrain.points.length
+    ) {
+      const currentHeight = this.terrain.points[currentX] || 0;
+      const nextHeight = this.terrain.points[nextX] || 0;
+      const heightDiff = Math.abs(nextHeight - currentHeight);
+      const angle =
+        Math.atan(heightDiff / Math.abs(distance)) * (180 / Math.PI);
+
+      // Block if terrain is too steep
+      if (angle > 70) {
+        return { canMove: false, reason: "Terrain too steep" };
+      }
+    }
+
+    return { canMove: true };
+  }
+
+  moveDome(
+    domeIndex: number,
+    direction: number,
+    distance: number = 2
+  ): boolean {
+    const moveCheck = this.canDomeMove(domeIndex, direction, distance);
+    if (!moveCheck.canMove) {
+      return false;
+    }
+
+    const dome = this.domes[domeIndex];
+    const newX = dome.x + direction * distance;
+
+    // Update dome position
+    dome.x = newX;
+
+    // Adjust Y position to sit on terrain
+    dome.y = this.terrain.getHeight(newX);
+
+    // Deduct movement points
+    dome.movementPointsRemaining = Math.max(
+      0,
+      dome.movementPointsRemaining - distance
+    );
+
+    return true;
+  }
+
+  resetTurnFlags(): void {
+    // Reset movement points at the start of each turn
+    this.domes.forEach((dome) => {
+      dome.resetMovementPoints();
+    });
   }
 
   getTerrainHeight(x: number): number {

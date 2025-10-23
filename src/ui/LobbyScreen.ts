@@ -7,6 +7,7 @@ export class LobbyScreen {
   ) => void;
   private readonly STORAGE_KEY_NAME = "projectAP_playerName";
   private readonly STORAGE_KEY_COLOR = "projectAP_playerColor";
+  private readonly STORAGE_KEY_PLAYER_COUNT = "projectAP_playerCount";
 
   constructor() {
     this.container = this.createUI();
@@ -98,7 +99,7 @@ export class LobbyScreen {
       const playerName = nameInput.value.trim() || "Player";
 
       // Save preferences to localStorage
-      this.savePreferences(playerName, selectedColor);
+      this.savePreferences(playerName, selectedColor, selectedPlayerCount);
 
       this.onJoinCallback?.(playerName, selectedColor, selectedPlayerCount);
     });
@@ -150,10 +151,18 @@ export class LobbyScreen {
     this.container.remove();
   }
 
-  private savePreferences(name: string, color: string): void {
+  private savePreferences(
+    name: string,
+    color: string,
+    playerCount: number
+  ): void {
     try {
       localStorage.setItem(this.STORAGE_KEY_NAME, name);
       localStorage.setItem(this.STORAGE_KEY_COLOR, color);
+      localStorage.setItem(
+        this.STORAGE_KEY_PLAYER_COUNT,
+        playerCount.toString()
+      );
     } catch (error) {
       console.warn("Could not save preferences to localStorage:", error);
     }
@@ -163,6 +172,9 @@ export class LobbyScreen {
     try {
       const savedName = localStorage.getItem(this.STORAGE_KEY_NAME);
       const savedColor = localStorage.getItem(this.STORAGE_KEY_COLOR);
+      const savedPlayerCount = localStorage.getItem(
+        this.STORAGE_KEY_PLAYER_COUNT
+      );
 
       // Load saved name
       if (savedName) {
@@ -190,6 +202,20 @@ export class LobbyScreen {
           if (btnColor === savedColor) {
             // Remove active from all buttons
             colorButtons.forEach((b) => b.classList.remove("active"));
+            // Set this one as active
+            btn.classList.add("active");
+          }
+        });
+      }
+
+      // Load saved player count
+      if (savedPlayerCount) {
+        const countButtons = this.container.querySelectorAll(".count-btn");
+        countButtons.forEach((btn) => {
+          const btnCount = btn.getAttribute("data-count");
+          if (btnCount === savedPlayerCount) {
+            // Remove active from all buttons
+            countButtons.forEach((b) => b.classList.remove("active"));
             // Set this one as active
             btn.classList.add("active");
           }

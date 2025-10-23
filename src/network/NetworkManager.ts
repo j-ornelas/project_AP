@@ -38,6 +38,12 @@ export class NetworkManager {
     windSpeed: number;
     playerLastWinds: [number, number][];
   }) => void;
+  public onDomeMove?: (data: {
+    playerId: string;
+    playerNumber: number;
+    newX: number;
+    newY: number;
+  }) => void;
   public onGameOver?: (data: { winner: NetworkPlayer }) => void;
   public onOpponentDisconnected?: () => void;
 
@@ -81,6 +87,11 @@ export class NetworkManager {
       this.onTurnChange?.(data);
     });
 
+    this.socket.on("domeMove", (data) => {
+      console.log("Dome moved by player", data.playerNumber);
+      this.onDomeMove?.(data);
+    });
+
     this.socket.on("gameOver", (data) => {
       console.log("Game over! Winner:", data.winner);
       this.onGameOver?.(data);
@@ -103,6 +114,16 @@ export class NetworkManager {
   fire(power: number, angle: number): void {
     if (!this.roomId) return;
     this.socket.emit("fire", { roomId: this.roomId, power, angle });
+  }
+
+  reportDomeMove(playerNumber: number, newX: number, newY: number): void {
+    if (!this.roomId) return;
+    this.socket.emit("domeMove", {
+      roomId: this.roomId,
+      playerNumber,
+      newX,
+      newY,
+    });
   }
 
   reportImpact(

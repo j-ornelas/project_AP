@@ -29,6 +29,14 @@
           </div>
         </div>
 
+        <div id="movement-points-bar" style="display: none;">
+          <div class="movement-label">Movement Points</div>
+          <div class="movement-bar-container">
+            <div id="movement-points-fill" class="movement-bar-fill"></div>
+            <div id="movement-points-text" class="movement-bar-text">80/80</div>
+          </div>
+        </div>
+
         <div id="controls" style="display: none;">
           <div class="stats">
             <div>Power: <span id="power-value">50</span>%</div>
@@ -42,7 +50,10 @@
             <label for="angle-slider">Angle:</label>
             <input type="range" id="angle-slider" min="0" max="180" value="45">
           </div>
-          <button id="fire-button">Fire!</button>
+          <div class="button-group">
+            <button id="move-button" class="secondary-btn">Move (M)</button>
+            <button id="fire-button" class="primary-btn">Fire! (Space)</button>
+          </div>
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ export class Game {
   private networkManager: NetworkManager;
   private localPlayerId: string;
   private inputHandler: InputHandler;
+  private movementMode: boolean = false; // Track if in movement mode
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -50,9 +51,18 @@ export class Game {
       }
     };
 
+    // Handle opponent's movement
+    this.networkManager.onDomeMove = (data) => {
+      if (data.playerId !== this.localPlayerId) {
+        this.applyDomeMovement(data.playerNumber, data.newX, data.newY);
+      }
+    };
+
     // Handle turn changes
     this.networkManager.onTurnChange = (data) => {
       this.gameState.updateFromNetwork(data);
+      this.gameState.resetTurnFlags(); // Reset movement flags for new turn
+      this.updateMoveButtonState();
       this.updateUI();
     };
 
@@ -217,6 +227,178 @@ export class Game {
 
   private updateUI(): void {
     this.gameState.updateUI(this.localPlayerId);
+    this.updateMoveButtonState();
+  }
+
+  enterMovementMode(): void {
+    console.log("Attempting to enter movement mode...");
+
+    if (!this.isMyTurn()) {
+      console.log("Cannot enter movement mode - not your turn");
+      return;
+    }
+
+    const currentDome = this.getCurrentPlayerDome();
+    console.log("Current dome:", currentDome);
+
+    if (!currentDome || !currentDome.canMove()) {
+      console.log(
+        "Cannot enter movement mode - no movement points or dome not found"
+      );
+      return;
+    }
+
+    this.movementMode = true;
+    this.updateMoveButtonState();
+    this.updateMovementPointsBar();
+    const movementBar = document.getElementById("movement-points-bar");
+    if (movementBar) movementBar.style.display = "flex";
+    console.log(
+      "✅ Movement mode ACTIVE: Use Arrow Keys (Left/Right) to move, M or ESC to exit"
+    );
+  }
+
+  exitMovementMode(): void {
+    this.movementMode = false;
+    this.updateMoveButtonState();
+    const movementBar = document.getElementById("movement-points-bar");
+    if (movementBar) movementBar.style.display = "none";
+  }
+
+  isInMovementMode(): boolean {
+    return this.movementMode;
+  }
+
+  moveDome(direction: number): void {
+    if (!this.isMyTurn() || !this.movementMode) {
+      return;
+    }
+
+    const localPlayer = this.gameState.players.find(
+      (p) => p.id === this.localPlayerId
+    );
+    if (!localPlayer) {
+      return;
+    }
+
+    const domeIndex = localPlayer.playerNumber - 1;
+    const dome = this.gameState.domes[domeIndex];
+
+    // Check if out of movement points
+    if (!dome || !dome.canMove()) {
+      console.log("Out of movement points!");
+      this.exitMovementMode();
+      return;
+    }
+
+    // Move in small increments (2 pixels at a time)
+    const success = this.gameState.moveDome(domeIndex, direction, 2);
+
+    if (success) {
+      // Sync position to server (throttled to avoid spam)
+      this.sendMovementUpdate();
+      // Update movement bar
+      this.updateMovementPointsBar();
+
+      // Auto-exit if out of points
+      if (!dome.canMove()) {
+        console.log("Movement points depleted!");
+        this.exitMovementMode();
+      }
+    }
+  }
+
+  private movementUpdateTimeout: number | null = null;
+  private lastSentPosition: { x: number; y: number } | null = null;
+
+  private sendMovementUpdate(): void {
+    // Throttle server updates to every 100ms
+    if (this.movementUpdateTimeout !== null) {
+      return;
+    }
+
+    this.movementUpdateTimeout = window.setTimeout(() => {
+      const localPlayer = this.gameState.players.find(
+        (p) => p.id === this.localPlayerId
+      );
+      if (!localPlayer) return;
+
+      const dome = this.gameState.domes[localPlayer.playerNumber - 1];
+      if (!dome) return;
+
+      // Only send if position actually changed
+      if (
+        !this.lastSentPosition ||
+        Math.abs(dome.x - this.lastSentPosition.x) > 5 ||
+        Math.abs(dome.y - this.lastSentPosition.y) > 5
+      ) {
+        this.networkManager.reportDomeMove(
+          localPlayer.playerNumber,
+          dome.x,
+          dome.y
+        );
+        this.lastSentPosition = { x: dome.x, y: dome.y };
+      }
+
+      this.movementUpdateTimeout = null;
+    }, 100);
+  }
+
+  private updateMovementPointsBar(): void {
+    const currentDome = this.getCurrentPlayerDome();
+    if (!currentDome) return;
+
+    const bar = document.getElementById("movement-points-fill");
+    const text = document.getElementById("movement-points-text");
+
+    if (bar && text) {
+      const percentage =
+        (currentDome.movementPointsRemaining / currentDome.movementRange) * 100;
+      bar.style.width = `${percentage}%`;
+      text.textContent = `${Math.ceil(currentDome.movementPointsRemaining)}/${
+        currentDome.movementRange
+      }`;
+    }
+  }
+
+  private applyDomeMovement(
+    playerNumber: number,
+    newX: number,
+    newY: number
+  ): void {
+    const domeIndex = playerNumber - 1;
+    const dome = this.gameState.domes[domeIndex];
+    if (dome) {
+      dome.x = newX;
+      dome.y = newY;
+    }
+  }
+
+  private updateMoveButtonState(): void {
+    const moveButton = document.getElementById(
+      "move-button"
+    ) as HTMLButtonElement;
+    if (moveButton) {
+      const currentDome = this.getCurrentPlayerDome();
+      const canMove = this.isMyTurn() && currentDome && currentDome.canMove();
+      moveButton.disabled = !canMove;
+
+      if (this.movementMode) {
+        moveButton.textContent = "Moving... (M to exit)";
+        moveButton.style.opacity = "0.7";
+      } else {
+        moveButton.textContent = "Move (M)";
+        moveButton.style.opacity = "1";
+      }
+    }
+  }
+
+  private getCurrentPlayerDome() {
+    const localPlayer = this.gameState.players.find(
+      (p) => p.id === this.localPlayerId
+    );
+    if (!localPlayer) return null;
+    return this.gameState.domes[localPlayer.playerNumber - 1];
   }
 
   private showGameOver(winner: NetworkPlayer): void {

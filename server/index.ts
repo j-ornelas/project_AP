@@ -132,6 +132,29 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Player moves their dome
+  socket.on("domeMove", ({ roomId, playerNumber, newX, newY }) => {
+    const gameRoom = gameRooms.get(roomId);
+    if (!gameRoom) return;
+
+    // Update dome position in game room
+    const player = gameRoom.players.find(
+      (p) => p.playerNumber === playerNumber
+    );
+    if (player && player.position) {
+      player.position.x = newX;
+      player.position.y = newY;
+    }
+
+    // Broadcast the movement to all players in the room
+    io.to(roomId).emit("domeMove", {
+      playerId: socket.id,
+      playerNumber,
+      newX,
+      newY,
+    });
+  });
+
   // Projectile impact (sent by the client who calculated it)
   socket.on("projectileImpact", ({ roomId, x, damage, hitPlayerId }) => {
     const gameRoom = gameRooms.get(roomId);

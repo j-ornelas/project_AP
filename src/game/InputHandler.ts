@@ -4,10 +4,12 @@ export class InputHandler {
   private game: Game;
   private power: number = 50;
   private angle: number = 45;
+  private keysPressed: Set<string> = new Set();
 
   constructor(game: Game) {
     this.game = game;
     this.setupEventListeners();
+    this.startMovementLoop();
   }
 
   getCurrentAngle(): number {
@@ -56,10 +58,40 @@ export class InputHandler {
       });
     }
 
+    // Move button
+    const moveButton = document.getElementById(
+      "move-button"
+    ) as HTMLButtonElement;
+
+    if (moveButton) {
+      moveButton.addEventListener("click", () => {
+        this.game.enterMovementMode();
+      });
+    }
+
     // Keyboard controls
     document.addEventListener("keydown", (e) => {
+      this.keysPressed.add(e.key);
       this.handleKeyDown(e);
     });
+
+    document.addEventListener("keyup", (e) => {
+      this.keysPressed.delete(e.key);
+    });
+  }
+
+  private startMovementLoop(): void {
+    // Check for held keys every 16ms (about 60 FPS)
+    window.setInterval(() => {
+      if (this.game.isInMovementMode()) {
+        if (this.keysPressed.has("ArrowLeft")) {
+          this.game.moveDome(-1);
+        }
+        if (this.keysPressed.has("ArrowRight")) {
+          this.game.moveDome(1);
+        }
+      }
+    }, 16);
   }
 
   private handleFire(): void {
@@ -90,6 +122,28 @@ export class InputHandler {
       return;
     }
 
+    // Handle movement mode
+    if (this.game.isInMovementMode()) {
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          // Don't process if already moving
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          // Don't process if already moving
+          break;
+        case "Escape":
+        case "m":
+        case "M":
+          e.preventDefault();
+          this.game.exitMovementMode();
+          break;
+      }
+      return; // Don't process other keys in movement mode
+    }
+
+    // Normal aiming mode
     switch (e.key) {
       case "ArrowUp":
         this.adjustPower(1);
@@ -107,6 +161,16 @@ export class InputHandler {
       case "Enter":
         e.preventDefault();
         this.handleFire();
+        break;
+      case "m":
+      case "M":
+        e.preventDefault();
+        // Toggle movement mode
+        if (this.game.isInMovementMode()) {
+          this.game.exitMovementMode();
+        } else {
+          this.game.enterMovementMode();
+        }
         break;
     }
   }
